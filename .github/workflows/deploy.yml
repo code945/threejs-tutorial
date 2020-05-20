@@ -17,3 +17,7 @@ jobs: #脚本内容
 
     - name: Deploy
       uses: peaceiris/actions-gh-pages@v3.6.1
+      env:
+          publish_dir: 'dist'
+          deploy_key: ${{secrets.publish}}
+
