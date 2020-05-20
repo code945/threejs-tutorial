@@ -20,5 +20,5 @@ jobs: #脚本内容
       with: 
         publish_dir: dist
       env:
-          DEPLOY_KEY: ${{secrets.public}}
+        ACTIONS_DEPLOY_KEY: ${{secrets.public}}
 
