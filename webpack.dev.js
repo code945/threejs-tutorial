@@ -10,11 +10,40 @@ const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 const distFolder = './dist';
 
+
+const sections = [
+  "index",
+  "01.helloworld"
+]
+
+let entryPoints = {};
+let copyhtml=[];
+
+for(let i =0;i<sections.length;i++)
+{
+  var chunk = sections[i];
+  entryPoints[chunk] = `./src/scripts/${chunk}.js`;
+  copyhtml.push(
+    new HtmlWebpackPlugin({
+      title: "浏览",
+      filename: `${chunk}.html`,
+      template: `src/html/${chunk}.html`,
+      chunks:['vendors',chunk],
+      minify: {
+        removeRedundantAttributes: true, // 删除多余的属性
+        collapseWhitespace: true, // 折叠空白区域
+        removeAttributeQuotes: true, // 移除属性的引号
+        removeComments: true, // 移除注释
+        collapseBooleanAttributes: true // 省略只有 boolean 值的属性值 例如：readonly checked
+      },
+    }),
+  )
+}
+
+
 module.exports = {
   mode: 'development',
-  entry: {//入口文件
-    game:"./src/scripts/index.js",
-  }, 
+  entry:entryPoints, 
   output: {
     filename: 'js/[name].[hash:5].js',
     path: path.resolve(__dirname, distFolder),
@@ -32,24 +61,12 @@ module.exports = {
     new CleanWebpackPlugin(
       distFolder,
       //{ root: path.resolve(__dirname, '../')}
-    ),
-    new HtmlWebpackPlugin({
-      title: "浏览",
-      filename: "index.html",
-      template: 'src/index.html',
-      chunks:['vendors','game'],
-      minify: {
-        removeRedundantAttributes: true, // 删除多余的属性
-        collapseWhitespace: true, // 折叠空白区域
-        removeAttributeQuotes: true, // 移除属性的引号
-        removeComments: true, // 移除注释
-        collapseBooleanAttributes: true // 省略只有 boolean 值的属性值 例如：readonly checked
-      },
-    }),
+    ), 
     new CopyWebpackPlugin([{
       from: 'src/static',
       to: 'assets'
-    }, ])
+    }, ]),
+    ...copyhtml
   ],
   module: {
     rules: [{
