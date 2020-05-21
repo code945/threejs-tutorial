@@ -14,7 +14,8 @@ const distFolder = "./dist";
 
 const sections = [
   "index",
-  "01.helloworld"
+  "helloworld",
+  "primitives"
 ]
 
 let entryPoints = {};
@@ -26,7 +27,7 @@ for(let i =0;i<sections.length;i++)
   entryPoints[chunk] = `./src/scripts/${chunk}.js`;
   copyhtml.push(
     new HtmlWebpackPlugin({
-      title: "浏览",
+      title: "threejs知多少-"+chunk,
       filename: `${chunk}.html`,
       template: `src/html/${chunk}.html`,
       chunks:['vendors',chunk],
