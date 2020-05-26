@@ -14,7 +14,11 @@ const distFolder = './dist';
 const sections = [
   "index",
   "helloworld",
-  "primitives"
+  "primitives",
+  "linght-shadow-material",
+  "load-gltf",
+  "interactive",
+  "gpu-picking"
 ]
 
 let entryPoints = {};
