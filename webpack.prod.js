@@ -19,7 +19,11 @@ const sections = [
   "linght-shadow-material",
   "load-gltf",
   "interactive",
-  "gpu-picking"
+  "gpu-picking",
+  "model-control",
+  "animation-basic",
+  "animation-tween",
+  "animation-model"
 ]
 
 let entryPoints = {};

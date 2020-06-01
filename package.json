@@ -8,6 +8,7 @@
     "build": "webpack --config webpack.prod.js"
   },
   "dependencies": {
+    "@tweenjs/tween.js": "^18.5.0",
     "three": "^0.116.1"
   },
   "devDependencies": {
