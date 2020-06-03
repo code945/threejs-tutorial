@@ -549,17 +549,23 @@ var OrbitControls = function ( object, domElement ) {
 	}
 
 	function handleMouseWheel( event ) {
-
-		if ( event.deltaY < 0 ) {
-
-			dollyIn( getZoomScale() );
-
-		} else if ( event.deltaY > 0 ) {
-
-			dollyOut( getZoomScale() );
-
+		//设置相机缩放比数值越大缩放越明显
+		let factor = 15;
+		//从鼠标位置转化为webgl屏幕坐标位置
+		let glScreenX = (event.clientX / scope.domElement.width) * 2 - 1;
+		let glScreenY = -(event.clientY / scope.domElement.height) * 2 + 1;
+		let vector = new Vector3(glScreenX, glScreenY, 0);
+		//从屏幕向量转为3d空间向量
+		vector.unproject(scope.object);
+		//相机偏移量
+		vector.sub(scope.object.position).setLength(factor);
+		if (event.deltaY < 0) {
+			scope.object.position.add(vector);
+			scope.target.add(vector);
+		} else {
+			scope.object.position.sub( vector);
+			scope.target.sub(vector);
 		}
-
 		scope.update();
 
 	}
