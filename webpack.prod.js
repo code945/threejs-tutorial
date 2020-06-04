@@ -23,7 +23,8 @@ const sections = [
   "model-control",
   "animation-basic",
   "animation-tween",
-  "animation-model"
+  "animation-model",
+  "shader"
 ]
 
 let entryPoints = {};
