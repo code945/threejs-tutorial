@@ -10,186 +10,154 @@
  *
  */
 
-import {
-	Vector2
-} from "../../../build/three.module.js";
+import { Vector2 } from "../three";
 
-var UVsDebug = function ( geometry, size ) {
+var UVsDebug = function (geometry, size) {
+    // handles wrapping of uv.x > 1 only
 
-	// handles wrapping of uv.x > 1 only
+    var abc = "abc";
+    var a = new Vector2();
+    var b = new Vector2();
 
-	var abc = 'abc';
-	var a = new Vector2();
-	var b = new Vector2();
+    var uvs = [new Vector2(), new Vector2(), new Vector2()];
 
-	var uvs = [
-		new Vector2(),
-		new Vector2(),
-		new Vector2()
-	];
+    var face = [];
 
-	var face = [];
+    var canvas = document.createElement("canvas");
+    var width = size || 1024; // power of 2 required for wrapping
+    var height = size || 1024;
+    canvas.width = width;
+    canvas.height = height;
 
-	var canvas = document.createElement( 'canvas' );
-	var width = size || 1024; // power of 2 required for wrapping
-	var height = size || 1024;
-	canvas.width = width;
-	canvas.height = height;
+    var ctx = canvas.getContext("2d");
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "rgba( 0, 0, 0, 1.0 )";
+    ctx.textAlign = "center";
 
-	var ctx = canvas.getContext( '2d' );
-	ctx.lineWidth = 2;
-	ctx.strokeStyle = 'rgba( 0, 0, 0, 1.0 )';
-	ctx.textAlign = 'center';
+    // paint background white
 
-	// paint background white
+    ctx.fillStyle = "rgba( 255, 255, 255, 1.0 )";
+    ctx.fillRect(0, 0, width, height);
 
-	ctx.fillStyle = 'rgba( 255, 255, 255, 1.0 )';
-	ctx.fillRect( 0, 0, width, height );
+    if (geometry.isGeometry) {
+        var faces = geometry.faces;
+        var uvSet = geometry.faceVertexUvs[0];
 
-	if ( geometry.isGeometry ) {
+        for (var i = 0, il = uvSet.length; i < il; i++) {
+            var face = faces[i];
+            var uv = uvSet[i];
 
-		var faces = geometry.faces;
-		var uvSet = geometry.faceVertexUvs[ 0 ];
+            face[0] = face.a;
+            face[1] = face.b;
+            face[2] = face.c;
 
-		for ( var i = 0, il = uvSet.length; i < il; i ++ ) {
+            uvs[0].copy(uv[0]);
+            uvs[1].copy(uv[1]);
+            uvs[2].copy(uv[2]);
 
-			var face = faces[ i ];
-			var uv = uvSet[ i ];
+            processFace(face, uvs, i);
+        }
+    } else {
+        var index = geometry.index;
+        var uvAttribute = geometry.attributes.uv;
 
-			face[ 0 ] = face.a;
-			face[ 1 ] = face.b;
-			face[ 2 ] = face.c;
+        if (index) {
+            // indexed geometry
 
-			uvs[ 0 ].copy( uv[ 0 ] );
-			uvs[ 1 ].copy( uv[ 1 ] );
-			uvs[ 2 ].copy( uv[ 2 ] );
+            for (var i = 0, il = index.count; i < il; i += 3) {
+                face[0] = index.getX(i);
+                face[1] = index.getX(i + 1);
+                face[2] = index.getX(i + 2);
 
-			processFace( face, uvs, i );
+                uvs[0].fromBufferAttribute(uvAttribute, face[0]);
+                uvs[1].fromBufferAttribute(uvAttribute, face[1]);
+                uvs[2].fromBufferAttribute(uvAttribute, face[2]);
 
-		}
+                processFace(face, uvs, i / 3);
+            }
+        } else {
+            // non-indexed geometry
 
-	} else {
+            for (var i = 0, il = uvAttribute.count; i < il; i += 3) {
+                face[0] = i;
+                face[1] = i + 1;
+                face[2] = i + 2;
 
-		var index = geometry.index;
-		var uvAttribute = geometry.attributes.uv;
+                uvs[0].fromBufferAttribute(uvAttribute, face[0]);
+                uvs[1].fromBufferAttribute(uvAttribute, face[1]);
+                uvs[2].fromBufferAttribute(uvAttribute, face[2]);
 
-		if ( index ) {
+                processFace(face, uvs, i / 3);
+            }
+        }
+    }
 
-			// indexed geometry
+    return canvas;
 
-			for ( var i = 0, il = index.count; i < il; i += 3 ) {
+    function processFace(face, uvs, index) {
+        // draw contour of face
 
-				face[ 0 ] = index.getX( i );
-				face[ 1 ] = index.getX( i + 1 );
-				face[ 2 ] = index.getX( i + 2 );
+        ctx.beginPath();
 
-				uvs[ 0 ].fromBufferAttribute( uvAttribute, face[ 0 ] );
-				uvs[ 1 ].fromBufferAttribute( uvAttribute, face[ 1 ] );
-				uvs[ 2 ].fromBufferAttribute( uvAttribute, face[ 2 ] );
+        a.set(0, 0);
 
-				processFace( face, uvs, i / 3 );
+        for (var j = 0, jl = uvs.length; j < jl; j++) {
+            var uv = uvs[j];
 
-			}
+            a.x += uv.x;
+            a.y += uv.y;
 
-		} else {
+            if (j === 0) {
+                ctx.moveTo(uv.x * width, (1 - uv.y) * height);
+            } else {
+                ctx.lineTo(uv.x * width, (1 - uv.y) * height);
+            }
+        }
 
-			// non-indexed geometry
+        ctx.closePath();
+        ctx.stroke();
 
-			for ( var i = 0, il = uvAttribute.count; i < il; i += 3 ) {
+        // calculate center of face
 
-				face[ 0 ] = i;
-				face[ 1 ] = i + 1;
-				face[ 2 ] = i + 2;
+        a.divideScalar(uvs.length);
 
-				uvs[ 0 ].fromBufferAttribute( uvAttribute, face[ 0 ] );
-				uvs[ 1 ].fromBufferAttribute( uvAttribute, face[ 1 ] );
-				uvs[ 2 ].fromBufferAttribute( uvAttribute, face[ 2 ] );
+        // label the face number
 
-				processFace( face, uvs, i / 3 );
+        ctx.font = "12pt Arial bold";
+        ctx.fillStyle = "rgba( 0, 0, 0, 1.0 )";
+        ctx.fillText(index, a.x * width, (1 - a.y) * height);
 
-			}
+        if (a.x > 0.95) {
+            // wrap x // 0.95 is arbitrary
 
-		}
+            ctx.fillText(index, (a.x % 1) * width, (1 - a.y) * height);
+        }
 
-	}
+        //
 
-	return canvas;
+        ctx.font = "8pt Arial bold";
+        ctx.fillStyle = "rgba( 0, 0, 0, 1.0 )";
 
-	function processFace( face, uvs, index ) {
+        // label uv edge orders
 
-		// draw contour of face
+        for (j = 0, jl = uvs.length; j < jl; j++) {
+            var uv = uvs[j];
+            b.addVectors(a, uv).divideScalar(2);
 
-		ctx.beginPath();
+            var vnum = face[j];
+            ctx.fillText(abc[j] + vnum, b.x * width, (1 - b.y) * height);
 
-		a.set( 0, 0 );
+            if (b.x > 0.95) {
+                // wrap x
 
-		for ( var j = 0, jl = uvs.length; j < jl; j ++ ) {
-
-			var uv = uvs[ j ];
-
-			a.x += uv.x;
-			a.y += uv.y;
-
-			if ( j === 0 ) {
-
-				ctx.moveTo( uv.x * width, ( 1 - uv.y ) * height );
-
-			} else {
-
-				ctx.lineTo( uv.x * width, ( 1 - uv.y ) * height );
-
-			}
-
-		}
-
-		ctx.closePath();
-		ctx.stroke();
-
-		// calculate center of face
-
-		a.divideScalar( uvs.length );
-
-		// label the face number
-
-		ctx.font = '12pt Arial bold';
-		ctx.fillStyle = 'rgba( 0, 0, 0, 1.0 )';
-		ctx.fillText( index, a.x * width, ( 1 - a.y ) * height );
-
-		if ( a.x > 0.95 ) {
-
-			// wrap x // 0.95 is arbitrary
-
-			ctx.fillText( index, ( a.x % 1 ) * width, ( 1 - a.y ) * height );
-
-		}
-
-		//
-
-		ctx.font = '8pt Arial bold';
-		ctx.fillStyle = 'rgba( 0, 0, 0, 1.0 )';
-
-		// label uv edge orders
-
-		for ( j = 0, jl = uvs.length; j < jl; j ++ ) {
-
-			var uv = uvs[ j ];
-			b.addVectors( a, uv ).divideScalar( 2 );
-
-			var vnum = face[ j ];
-			ctx.fillText( abc[ j ] + vnum, b.x * width, ( 1 - b.y ) * height );
-
-			if ( b.x > 0.95 ) {
-
-				// wrap x
-
-				ctx.fillText( abc[ j ] + vnum, ( b.x % 1 ) * width, ( 1 - b.y ) * height );
-
-			}
-
-		}
-
-	}
-
+                ctx.fillText(
+                    abc[j] + vnum,
+                    (b.x % 1) * width,
+                    (1 - b.y) * height
+                );
+            }
+        }
+    }
 };
 
 export { UVsDebug };
